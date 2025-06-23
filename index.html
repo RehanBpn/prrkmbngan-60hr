@@ -1,0 +1,158 @@
+<<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Website Berkembang 60 Hari</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(to right, #c2e9fb, #a1c4fd);
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .fade-in {
+      animation: fadeIn 2s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body class="min-h-screen p-4">
+  <nav class="flex justify-between items-center bg-white p-4 shadow rounded-xl mb-6">
+    <span class="font-bold text-lg">60 Hari Berkembang</span>
+    <ul class="flex space-x-4">
+      <li><a href="#" class="text-blue-600 hover:underline">Beranda</a></li>
+      <li><a href="#habit-section" class="text-blue-600 hover:underline">Checklist</a></li>
+    </ul>
+  </nav>
+
+  <div class="bg-white rounded-2xl shadow-xl p-6 max-w-2xl mx-auto fade-in">
+    <h1 class="text-2xl font-bold text-center mb-4">Website Bother Berkembang</h1>
+    <p class="text-center mb-6">Hai, selamat datang Wisatya!<br>Yuk berkembang dalam 60 hari 💪</p>
+
+    <img id="motivasiImage" src="img/c1.png" alt="Semangat Berubah" class="rounded-lg shadow mb-6 w-full">
+
+    <section id="habit-section">
+      <form id="habitForm" class="space-y-4">
+        <label class="flex items-center">
+          <input type="checkbox" name="sleep" class="mr-2"> Tidur minimal 9 jam
+        </label>
+        <label class="flex items-center">
+          <input type="checkbox" name="water" class="mr-2"> Minum 2 liter air
+        </label>
+        <label class="flex items-center">
+          <input type="checkbox" name="exercise" class="mr-2"> Olahraga minimal 30 menit
+        </label>
+        <label class="flex items-center">
+          <input type="checkbox" name="washFace" class="mr-2"> Cuci muka minimal 2 kali
+        </label>
+        <label class="flex items-center">
+          <input type="checkbox" name="shampoo" class="mr-2"> Keramas 3x dalam seminggu
+        </label>
+        <label class="flex items-center">
+          <input type="checkbox" name="meditation" class="mr-2"> Meditasi 3x1 menit
+        </label>
+        <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition">Kirim</button>
+      </form>
+
+      <p id="status" class="text-center mt-4 text-green-600 font-semibold"></p>
+    </section>
+
+    <section class="mt-10">
+      <h2 class="text-lg font-bold mb-2">Progres 60 Hari</h2>
+      <div class="w-full bg-gray-200 rounded-full h-4">
+        <div id="progressBar" class="bg-green-500 h-4 rounded-full" style="width: 0%"></div>
+      </div>
+      <p id="progressText" class="text-right text-sm mt-1">0 dari 60 hari</p>
+    </section>
+
+    <section class="mt-10">
+      <h2 class="text-lg font-bold mb-2">Kalender</h2>
+      <div id="calendar" class="grid grid-cols-7 gap-2 text-center"></div>
+    </section>
+  </div>
+
+  <script>
+    const form = document.getElementById('habitForm');
+    const statusText = document.getElementById('status');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const calendar = document.getElementById('calendar');
+    const motivasiImage = document.getElementById('motivasiImage');
+
+    let daysDone = parseInt(localStorage.getItem('daysDone') || '0');
+    updateProgress();
+    markCalendar();
+    updateImageByDay();
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const data = {
+        sleep: formData.has('sleep'),
+        water: formData.has('water'),
+        exercise: formData.has('exercise'),
+        washFace: formData.has('washFace'),
+        shampoo: formData.has('shampoo'),
+        meditation: formData.has('meditation'),
+        date: new Date().toLocaleDateString('id-ID')
+      };
+
+      if (!localStorage.getItem(data.date)) {
+        daysDone++;
+        localStorage.setItem('daysDone', daysDone);
+        localStorage.setItem(data.date, 'done');
+        updateProgress();
+        markCalendar();
+        updateImageByDay();
+      }
+
+      fetch('https://script.google.com/macros/s/PASTE_URL_WEB_APP/exec', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.text())
+      .then(result => {
+        statusText.textContent = 'Data berhasil dikirim!';
+        form.reset();
+      })
+      .catch(error => {
+        statusText.textContent = 'Gagal mengirim data';
+        console.error(error);
+      });
+    });
+
+    function updateProgress() {
+      const percent = Math.min(100, (daysDone / 60) * 100);
+      progressBar.style.width = percent + '%';
+      progressText.textContent = `${daysDone} dari 60 hari`;
+    }
+
+    function markCalendar() {
+      calendar.innerHTML = '';
+      for (let i = 1; i <= 60; i++) {
+        const day = document.createElement('div');
+        day.className = 'p-2 rounded border';
+        day.textContent = i;
+        if (i <= daysDone) {
+          day.classList.add('bg-green-300');
+        } else {
+          day.classList.add('bg-gray-100');
+        }
+        calendar.appendChild(day);
+      }
+    }
+
+    function updateImageByDay() {
+      const imageIndex = ((daysDone - 1) % 4) + 1; // 1 sampai 4
+      motivasiImage.src = `img/c${imageIndex}.png`;
+    }
+  </script>
+</body>
+</html>
